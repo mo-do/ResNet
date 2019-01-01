@@ -12,7 +12,7 @@ from keras.optimizers import SGD
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from build import ResnetBuilder
+from ResNet_build import ResnetBuilder
 from cifar_10_preprocess import get_preprocessed_cifar10
 from keras import losses
 
