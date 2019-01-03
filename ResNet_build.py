@@ -6,43 +6,24 @@ from keras.layers import (Activation, Add, GlobalAveragePooling2D,
 from keras.models import Model
 from keras.regularizers import l2
 from functions import (basic_block, bottleneck_block, compose, ResNetConv2D, residual_blocks)
-from keras.utils import plot_model
-from keras.optimizers import SGD
-import time
-import numpy as np
-import matplotlib.pyplot as plt
 
 class ResnetBuilder():
     @staticmethod
     def build(input_shape, num_outputs, block_type, repetitions):
-        '''ResNet モデルを作成する Factory クラス
-
-        Arguments:
-            input_shape: 入力の形状
-            num_outputs: ネットワークの出力数
-            block_type : residual block の種類 ('basic' or 'bottleneck')
-            repetitions: 同じ residual block を何個反復させるか
-        '''
-        # block_type に応じて、residual block を生成する関数を選択する。
         if block_type == 'basic':
             block_fn = basic_block
         elif block_type == 'bottleneck':
             block_fn = bottleneck_block
 
-        # モデルを作成する。
-        ##############################################
         input = Input(shape=input_shape)
 
-        # conv1 (batch normalization -> ReLU -> conv)
         conv1 = compose(ResNetConv2D(filters=64, kernel_size=(7, 7), strides=(2, 2)),
                         BatchNormalization(),
                         Activation('relu'))(input)
 
-        # pool
         pool1 = MaxPooling2D(
             pool_size=(3, 3), strides=(2, 2), padding='same')(conv1)
 
-        # conv2_x, conv3_x, conv4_x, conv5_x
         block = pool1
         filters = 64
         for i, r in enumerate(repetitions):
@@ -50,14 +31,11 @@ class ResnetBuilder():
                                     is_first_layer=(i == 0))(block)
             filters *= 2
 
-        # batch normalization -> ReLU
         block = compose(BatchNormalization(),
                         Activation('relu'))(block)
 
-        # global average pooling
         pool2 = GlobalAveragePooling2D()(block)
 
-        # dense
         fc1 = Dense(units=num_outputs,
                     kernel_initializer='he_normal',
                     activation='softmax')(pool2)
